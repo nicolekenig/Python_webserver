@@ -1,0 +1,11 @@
+
+{
+  "id": "bot2",
+  "allOf": ["base_bot"],
+  "properties": {
+    "default_message": {"type": "string"}
+  },
+  "required": ["permissions_list"]
+}
+
+

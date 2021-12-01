@@ -1,0 +1,1 @@
+{"allOf": {"id": 3666, "name": "my_bot", "intent": ["make_api_call"]}, "functions": [{"make_api_call": ""}]}

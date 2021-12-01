@@ -1,0 +1,1 @@
+{"allOf": {"id": 3666, "name": "my_bot", "intent": ["play_sound"]}, "permissions_list": ["play_sound"], "functions": [{"play_sound": "Playing Lalalala"}]}

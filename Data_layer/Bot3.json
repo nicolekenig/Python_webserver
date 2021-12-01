@@ -1,0 +1,14 @@
+{
+  "id": "bot3",
+  "allOf": ["base_bot"],
+  "properties": {
+    "password": {"type": "int"},
+    "certificate": {"type": "string"},
+    "auth": {"type": "string"}
+  },
+  "required": ["permissions_list"]
+}
+
+
+
+
