@@ -2,7 +2,7 @@
 from flask import Flask, render_template
 from flask_restful import Api, Resource, reqparse, marshal_with, fields
 import auth
-import createJsonData
+import create_json_data
 import utils
 import create_task as ct
 
@@ -201,7 +201,7 @@ api.add_resource(server, "/botHandler/<string:bot_type>")
 # If we're running in stand alone mode, run the application
 if __name__ == '__main__':
     # create all the bots JSON file and there functions
-    createJsonData.run()
+    create_json_data.run()
 
     # start the server with the 'run()' method
     app.run(port=5000, debug=True)

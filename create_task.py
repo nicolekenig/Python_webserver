@@ -108,14 +108,3 @@ def create_default_welcome_message_function(bot_permission, default_welcome_mess
 
     # add function to bot2
     add_intent_and_permissions('bot2', 'default_welcome_message', default_welcome_message)
-
-
-# def put_in_func(bot, func, new_value):
-#     path = bot + '.json'
-#     with open(path, "r") as jsonFile:
-#         data = json.load(jsonFile)
-#
-#     data["functions"][func] = new_value
-#
-#     with open(path, "w") as jsonFile:
-#         json.dump(data, jsonFile)

@@ -1,0 +1,1 @@
+{"allOf": {"id": 7253, "name": "my_bot", "intent": ["default_welcome_message"]}, "functions": {"default_welcome_message": "Hello"}}
