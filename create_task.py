@@ -1,29 +1,26 @@
 import json
-from flask_restful import abort
-'''
-:save_to_json - save the object in the json file according to the path
-:param: func_object- the function we want to save
-:param: path -  in which jason file to save
-'''
-
-def check_if_func_exist(func_name, bot_type):
-    # get bot permissions_list
-    f = open(bot_type + '.json')
-    bot_dict = json.load(f)
-    functions_list = bot_dict["functions"]
-    if func_name in functions_list:
-        return "exist"
-    else:
-        return "not exist"
+import auth
 
 
 def save_to_json(func_object, path, mode):
+    """
+    save the object in the json file according to the path
+    :param: func_object : (object) the function we want to save as a json object
+    :param: path:  (string)  in which jason file to save
+    """
     json_object = json.dumps(func_object)
     with open(path, mode) as outfile:
         outfile.write(json_object)
 
 
 def add_intent_and_permissions(bot_permission, func_name, func):
+    """
+    adds the function to the bots intent, and save it in the bot's JSON file
+    in case of bot1 add it to this permissions_list also
+    :param bot_permission: (string) bot1/ bot2/ bot3
+    :param func_name: (string) the function name to add
+    :param func : (object) the function as a JSON
+    """
     # add function to bot1
     file = bot_permission + ".json"
     f = open(file, "r")
@@ -31,6 +28,7 @@ def add_intent_and_permissions(bot_permission, func_name, func):
     f.close()
     bot_dict['allOf']['intent'].append(func_name)
     bot_dict['functions'][func_name] = func[func_name]
+
     if bot_permission == 'bot1':
         bot_dict['permissions_list'].append(func_name)
         bot = {
@@ -38,6 +36,7 @@ def add_intent_and_permissions(bot_permission, func_name, func):
             "permissions_list": bot_dict["permissions_list"],
             "functions": bot_dict["functions"]
         }
+
     elif bot_permission == 'bot2':
         bot = {
             "allOf": bot_dict['allOf'],
@@ -56,6 +55,13 @@ def add_intent_and_permissions(bot_permission, func_name, func):
 
 
 def create_function(func_name, bot_permission, default_value=''):
+    """
+    the function crater
+    :param func_name:  (string) the function name
+    :param bot_permission:  (string) bot1/bot2/bot3
+    :param default_value:  (string) the default return value of the function
+    :return response status and message:(dictionary) {status:201/409, message:message}
+    """
     if default_value is '':
         func = {
             func_name: "This is the " + func_name + " function"
@@ -65,8 +71,8 @@ def create_function(func_name, bot_permission, default_value=''):
             func_name: default_value
         }
     save_to_json(func, "logic.json", "a")
-    ans= check_if_func_exist(func_name=func_name, bot_type=bot_permission)
-    if ans == "not exist":
+    exist = auth.check_if_func_exists(bot_type=bot_permission,func=func_name)
+    if not exist:
         add_intent_and_permissions(bot_permission, func_name, func)
         return {'status': 201, 'message': "Function added successfully"}
     else:
@@ -75,6 +81,11 @@ def create_function(func_name, bot_permission, default_value=''):
 
 
 def create_play_sound_function(bot_permission, sound="Lalalala"):
+    """
+    creating the play sound function for bot1
+    :param bot_permission: (string)  bot1
+    :param sound: (string) the sound to play
+    """
     play_sound = {
         "play_sound": "Playing " + sound
     }
@@ -85,6 +96,11 @@ def create_play_sound_function(bot_permission, sound="Lalalala"):
 
 
 def create_default_welcome_message_function(bot_permission, default_welcome_message="Hello"):
+    """
+    creating the default welcome message function of bot2
+    :param bot_permission: (string) bot2
+    :param default_welcome_message: (string) the default welcome
+    """
     default_welcome_message = {
         "default_welcome_message": default_welcome_message
     }
@@ -94,12 +110,12 @@ def create_default_welcome_message_function(bot_permission, default_welcome_mess
     add_intent_and_permissions('bot2', 'default_welcome_message', default_welcome_message)
 
 
-def put_in_func(bot, func, new_value):
-    path = bot + '.json'
-    with open(path, "r") as jsonFile:
-        data = json.load(jsonFile)
-
-    data["functions"][func] = new_value
-
-    with open(path, "w") as jsonFile:
-        json.dump(data, jsonFile)
+# def put_in_func(bot, func, new_value):
+#     path = bot + '.json'
+#     with open(path, "r") as jsonFile:
+#         data = json.load(jsonFile)
+#
+#     data["functions"][func] = new_value
+#
+#     with open(path, "w") as jsonFile:
+#         json.dump(data, jsonFile)
