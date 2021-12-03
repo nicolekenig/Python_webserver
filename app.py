@@ -88,7 +88,7 @@ class server(Resource):
         return ans
 
     @marshal_with(resource_fields)
-    def patch(self,bot_type):
+    def patch(self, bot_type):
         args = put_and_patch_arg.parse_args()
         can_patch = True
         if bot_type == "bot1":

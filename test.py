@@ -182,14 +182,13 @@ def test_patch():
     test_patch_new_valid(base_url=BASE, bot="bot1", field_name="intent", new_value="play_sound")
     test_patch_new_valid(base_url=BASE, bot="bot2", field_name="intent",new_value="default_welcome_message")
     test_patch_new_valid(base_url=BASE, bot="bot3", field_name="intent",new_value="make_api_call",name="my_bot", password=46543)
-    # shound added them --- check again
-    # test_patch_new_valid(base_url=BASE, bot="bot1", field_name="intent", new_value="play_sound")
-    # test_patch_new_valid(base_url=BASE, bot="bot2", field_name="intent",new_value="default_welcome_message")
-    # test_patch_new_valid(base_url=BASE, bot="bot3", field_name="intent",new_value="make_api_call",name="my_bot", password=46543)
+
+    test_patch_new_valid(base_url=BASE, bot="bot1", field_name="intent", new_value="play_sound")
+    test_patch_new_valid(base_url=BASE, bot="bot2", field_name="intent",new_value="default_welcome_message")
+    test_patch_new_valid(base_url=BASE, bot="bot3", field_name="intent",new_value="make_api_call", name="my_bot", password=46543)
 
     test_patch_new_not_valid(base_url=BASE, bot="bot1", field_name="intent", new_value="default_welcome_message")
-    # check again
-    # test_patch_new_not_valid(base_url=BASE, bot="bot2", field_name="intent",new_value="play_sound")
+    test_patch_new_not_valid(base_url=BASE, bot="bot2", field_name="intent",new_value="play_sound")
     test_patch_new_not_valid(base_url=BASE, bot="bot3", field_name="intent",new_value="make_api_call")
     test_patch_new_not_valid(base_url=BASE, bot="bot3", field_name="intent",new_value="make_api_call",name="not_my_name", password=46543)
     test_patch_new_not_valid(base_url=BASE, bot="bot3", field_name="intent",new_value="make_api_call",name="my_bot", password=111)

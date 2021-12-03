@@ -34,6 +34,13 @@ def check_bot3_authentication(bot_type, name, password, certificate):
     else:
         return False
 
+def check_if_func_exsist(bot_type, func):
+    # get bot permissions_list
+    f = open(bot_type + '.json')
+    bot_dict = json.load(f)
+    functions_list = bot_dict["functions"]
+    return func in functions_list
+
 
 # ************************************** delete bot function **************************************
 def delete_bot(bot):
@@ -106,25 +113,28 @@ def update_bot_name(bot, field_name, new_value):
         return {'status': 400, 'message': "Something want wrong didnt updated successfully"}
 
 
-def update_bot_intent(bot, field_name, new_value):
+def update_bot_intent(bot, field_name, func_name):
     try:
-        path = bot + '.json'
-        with open(path, "r") as jsonFile:
-            bot_dict = json.load(jsonFile)
+        is_exists = check_if_func_exsist(bot_type=bot, func=func_name)
+        if is_exists:
+            path = bot + '.json'
+            with open(path, "r") as jsonFile:
+                bot_dict = json.load(jsonFile)
 
-        if new_value in bot_dict["allOf"][field_name]:
-            bot_dict["allOf"][field_name].remove(new_value)
-            if bot == "bot1":
-                bot_dict["permissions_list"].remove(new_value)
+            if func_name in bot_dict["allOf"][field_name]:
+                bot_dict["allOf"][field_name].remove(func_name)
+
+            else:
+                bot_dict["allOf"][field_name].append(func_name)
+
+            with open(path, "w") as jsonFile:
+                json.dump(bot_dict, jsonFile)
+
+            return {'status': 200, 'message': "Patch successfully"}
         else:
-            bot_dict["allOf"][field_name].append(new_value)
-
-        with open(path, "w") as jsonFile:
-            json.dump(bot_dict, jsonFile)
-
-        return {'status': 200, 'message': "Patch successfully"}
+            return {'status': 400, 'message': "Something want wrong didnt patch successfully"}
     except:
-        return {'status': 400, 'message': "Something want wrong didnt Patch successfully"}
+        return {'status': 400, 'message': "Something want wrong didnt patch successfully"}
 
 
 def update_bot_permissions_list(bot, field_name, new_value):
@@ -133,21 +143,21 @@ def update_bot_permissions_list(bot, field_name, new_value):
         with open(path, "r") as jsonFile:
             bot_dict = json.load(jsonFile)
 
-        if new_value in  bot_dict[field_name]:
+        if new_value in bot_dict[field_name]:
             bot_dict[field_name].remove(new_value)
 
         elif new_value not in bot_dict[field_name] and new_value in bot_dict["allOf"]["intent"]:
             bot_dict[field_name].append(new_value)
 
-        elif new_value not in bot_dict[field_name] and new_value not in bot_dict["allOf"]["intent"]:
-            return {'status': 400, 'message': "Something want wrong didnt Patch successfully"}
+        elif new_value not in bot_dict["allOf"]["intent"]:
+            return {'status': 400, 'message': "Something want wrong didnt patch successfully"}
 
         with open(path, "w") as jsonFile:
             json.dump(bot_dict, jsonFile)
 
         return {'status': 200, 'message': "Patch successfully"}
     except:
-        return {'status': 400, 'message': "Something want wrong didnt Patch successfully"}
+        return {'status': 400, 'message': "Something want wrong didnt patch successfully"}
 
 
 def update_bot_is_basic_authentication(bot, field_name, new_value, certificate=''):
@@ -166,7 +176,7 @@ def update_bot_is_basic_authentication(bot, field_name, new_value, certificate='
             json.dump(bot_dict, jsonFile)
         return {'status': 200, 'message': "Patch successfully"}
     except:
-        return {'status': 400, 'message': "Something want wrong didnt Patch successfully"}
+        return {'status': 400, 'message': "Something want wrong didnt patch successfully"}
 
 
 def update_in_bot(bot, field_name, new_value, sub_field_name_or_sub_value=''):
@@ -183,11 +193,11 @@ def update_in_bot(bot, field_name, new_value, sub_field_name_or_sub_value=''):
 # ************************************** patch function **************************************
 def patch_in_bot(bot, field_name, new_value, sub_field_name_or_sub_value=''):
     if field_name == "intent":
-        return update_bot_intent(bot=bot, field_name=field_name, new_value=new_value)
+        return update_bot_intent(bot=bot, field_name=field_name, func_name=new_value)
     if bot == 'bot1' and field_name == "permissions_list":
         return update_bot_permissions_list(bot=bot, field_name=field_name, new_value=new_value)
     if bot == 'bot3' and field_name == "is_basic_authentication":
         return update_bot_is_basic_authentication(bot=bot, field_name=field_name, new_value=new_value,
                                                   certificate=sub_field_name_or_sub_value)
     else:
-        return {'status': 400, 'message': "Something want wrong didnt updated successfully"}
+        return {'status': 400, 'message':  "Something want wrong didnt patch successfully"}
