@@ -1,6 +1,8 @@
 import pytest
 import requests
 
+import create_json_data
+
 BASE = 'http://127.0.0.1:5000/botHandler/'
 
 
@@ -23,10 +25,22 @@ def get_function(base_url, bot, func_name, name='', password=0, certificate=''):
 
 
 # ------------------------------------------- sub tests for post -------------------------------------------
-def post_new_function(base_url, bot, func_name, default_value):
+def post_new_function(base_url, bot, func_name, default_value, name='', password=0, certificate=''):
     url = base_url + bot
-    new_func = {"func_name": func_name, "default_value": default_value}
-    resp = requests.post(url, new_func)
+    if bot != "bot3":
+        param = {
+            "func_name": func_name,
+            "default_value": default_value
+        }
+    else:
+        param = {
+            "func_name": func_name,
+            "default_value": default_value,
+            "name": name,
+            "password": password,
+            "certificate": certificate
+        }
+    resp = requests.post(url, param)
     return resp.json()
 
 
@@ -87,23 +101,23 @@ def delete_json(delete_url, bot):
 class TestGet:
     def test1_get(self):
         ans = get_function(base_url=BASE, bot="bot1", func_name="play_sound")
-        assert ans == {'status': 200, 'message': "Playing Lalalala"}
+        assert ans == {'status': 200, 'message': "Lalalala"}
 
     def test2_get(self):
-        ans = get_function(base_url=BASE, bot="bot2", func_name="play_sound")
-        assert ans == {'status': 401, 'message': "You dont have permission for this function"}
+        ans = get_function(base_url=BASE, bot="bot2", func_name="default_welcome_message")
+        assert ans == {'status': 200, 'message': "Hello (default message)"}
 
     def test3_get(self):
-        ans = get_function(base_url=BASE, bot="bot3", func_name="play_sound")
-        assert ans == {'status': 401, 'message': "You dont have permission for this function"}
+        ans = get_function(base_url=BASE, bot="bot3", func_name="make_api_call", name="my_bot", password=46543)
+        assert ans == {'status': 200, 'message': "making an api call"}
 
     def test4_get(self):
         ans = get_function(base_url=BASE, bot="bot1", func_name="default_welcome_message")
         assert ans == {'status': 401, 'message': "You dont have permission for this function"}
 
     def test5_get(self):
-        ans = get_function(base_url=BASE, bot="bot2", func_name="default_welcome_message")
-        assert ans == {'status': 200, 'message': "Hello"}
+        ans = get_function(base_url=BASE, bot="bot2", func_name="play_sound")
+        assert ans == {'status': 401, 'message': "You dont have permission for this function"}
 
     def test6_get(self):
         ans = get_function(base_url=BASE, bot="bot3", func_name="default_welcome_message")
@@ -118,8 +132,8 @@ class TestGet:
         assert ans == {'status': 401, 'message': "You dont have permission for this function"}
 
     def test9_get(self):
-        ans = get_function(base_url=BASE, bot="bot3", func_name="make_api_call", name="my_bot", password=46543)
-        assert ans == {'status': 200, 'message': "This is the make_api_call function"}
+        ans = get_function(base_url=BASE, bot="bot3", func_name="play_sound")
+        assert ans == {'status': 401, 'message': "You dont have permission for this function"}
 
     def test10_get(self):
         ans = get_function(base_url=BASE, bot="bot3", func_name="make_api_call", name="not_my_name", password=46543)
@@ -133,11 +147,6 @@ class TestGet:
         ans = get_function(base_url=BASE, bot="bot3", func_name="make_api_call", name="not_my_name", password=1111)
         assert ans == {'status': 401, 'message': "You dont have permission for this function"}
 
-    # def test13_get(self):
-        # ans= test_get_function_valid(BASE,"bot3","my_bot",46543,"my-certificate!")
-        # assert ans == {'status': 200, 'message': "Playing Lalalala"}
-
-
 # ******************************************** post test ********************************************
 class TestPost:
     def test1_post(self):
@@ -145,8 +154,27 @@ class TestPost:
         assert ans == {'status': 201, 'message': "Function added successfully"}
 
     def test2_post(self):
+        ans = post_new_function(base_url=BASE, bot="bot2", func_name="play_movie", default_value="Harry Potter")
+        assert ans == {'status': 201, 'message': "Function added successfully"}
+
+    def test3_post(self):
+        ans = post_new_function(base_url=BASE, bot="bot3", func_name="next_meeting_location", default_value="New York",
+                                name='my_bot', password=46543)
+        assert ans == {'status': 201, 'message': "Function added successfully"}
+
+    def test4_post(self):
         ans = post_new_function(base_url=BASE, bot="bot1", func_name="drink", default_value="water")
-        assert ans == {'status': 409, 'message': "Function already exist in the bot"}
+        assert ans == {'status': 400, 'message': "Something want wrong didnt post successfully"}
+
+    def test5_post(self):
+        ans = post_new_function(base_url=BASE, bot="bot2", func_name="default_welcome_message",
+                                default_value="new message")
+        assert ans == {'status': 400, 'message': "Something want wrong didnt post successfully"}
+
+    def test6_post(self):
+        ans = post_new_function(base_url=BASE, bot="bot3", func_name="next_meeting_location",
+                                default_value="Los Angeles")
+        assert ans == {'status': 400, 'message': "Something want wrong didnt post successfully"}
 
 
 # ******************************************** put test ********************************************
@@ -163,18 +191,30 @@ class TestPut:
         assert ans == {'status': 200, 'message': "Updated successfully"}
 
     def test3_put(self):
+        ans = put_new_value(base_url=BASE, bot="bot1", field_name="name", new_value="my_bot1")
+        assert ans == {'status': 200, 'message': "Updated successfully"}
+
+    def test4_put(self):
+        ans = put_new_value(base_url=BASE, bot="bot2", field_name="name", new_value="my_bot2")
+        assert ans == {'status': 200, 'message': "Updated successfully"}
+
+    def test5_put(self):
+        ans = put_new_value(base_url=BASE, bot="bot3", field_name="name", new_value="my_bot3", name='my_bot', password=46543)
+        assert ans == {'status': 200, 'message': "Updated successfully"}
+
+    def test6_put(self):
         ans = put_new_value(base_url=BASE, bot="bot1", field_name="functions",
                             new_value="Hi, this is my new welcome massage", sub_field_name_or_sub_value="Not_bot1_func")
         assert ans == {'status': 400, 'message': "Something want wrong didnt updated successfully"}
 
-    def test4_put(self):
+    def test7_put(self):
         ans = put_new_value(base_url=BASE, bot="bot2", field_name="functions", new_value="Bom bom bom",
                             sub_field_name_or_sub_value="Not_bot2_func")
         assert ans == {'status': 400, 'message': "Something want wrong didnt updated successfully"}
 
-    def test5_put(self):
+    def test8_put(self):
         ans = put_new_value(base_url=BASE, bot="bot3", field_name="functions", new_value="Bom bom bom",
-                            sub_field_name_or_sub_value="Not_bot3_func")
+                            sub_field_name_or_sub_value="Not_bot3_func", name='my_bot3', password=46543)
         assert ans == {'status': 400, 'message': "Something want wrong didnt updated successfully"}
 
 
@@ -189,7 +229,7 @@ class TestPatch:
         assert ans == {'status': 200, 'message': "Patch successfully"}
 
     def test3_patch(self):
-        ans = patch_new_value(base_url=BASE, bot="bot3", field_name="intent", new_value="make_api_call", name="my_bot",
+        ans = patch_new_value(base_url=BASE, bot="bot3", field_name="intent", new_value="make_api_call", name="my_bot3",
                               password=46543)
         assert ans == {'status': 200, 'message': "Patch successfully"}
 
@@ -202,7 +242,7 @@ class TestPatch:
         assert ans == {'status': 200, 'message': "Patch successfully"}
 
     def test6_patch(self):
-        ans = patch_new_value(base_url=BASE, bot="bot3", field_name="intent", new_value="make_api_call", name="my_bot",
+        ans = patch_new_value(base_url=BASE, bot="bot3", field_name="intent", new_value="make_api_call", name="my_bot3",
                               password=46543)
         assert ans == {'status': 200, 'message': "Patch successfully"}
 
@@ -269,9 +309,40 @@ class TestDelete:
         assert ans == {'status': 404, 'message': 'File dose not exist or could not deleted bot'}
 
 
+# ******************************************** complex test ********************************************
+class TestComplexCases:
+    def test1_bot3_not_basic_auth(self):
+        create_json_data.run()
+        ans = patch_new_value(base_url=BASE, bot="bot3", field_name="is_basic_authentication", new_value="False", name="my_bot",
+                              password=46543)
+        assert ans == {'status': 200, 'message': "Patch successfully"}
+
+        ans = put_new_value(base_url=BASE, bot="bot3", field_name="name", new_value="my_bot3", name='my_bot', password=46543,certificate="my-certificate!")
+        assert ans == {'status': 200, 'message': "Updated successfully"}
+
+        ans = get_function(base_url=BASE, bot="bot3", func_name="make_api_call", name="my_bot3", password=46543, certificate="my-certificate!")
+        assert ans == {'status': 200, 'message': "making an api call"}
+
+        ans = get_function(base_url=BASE, bot="bot3", func_name="play_sound", name="my_bot3", password=46543, certificate="my-certificate!")
+        assert ans == {'status': 401, 'message': "You dont have permission for this function"}
+
+        ans = post_new_function(base_url=BASE, bot="bot3", func_name="next_meeting_location", default_value="New York",
+                                name='my_bot3', password=46543, certificate="my-certificate!")
+        assert ans == {'status': 201, 'message': "Function added successfully"}
+
+        ans = post_new_function(base_url=BASE, bot="bot3", func_name="next_meeting_location",
+                                default_value="Los Angeles")
+        assert ans == {'status': 400, 'message': "Something want wrong didnt post successfully"}
+
+        ans = put_new_value(base_url=BASE, bot="bot3", field_name="functions", new_value="Bom bom bom",
+                            sub_field_name_or_sub_value="Not_bot3_func",name="my_bot3", password=46543, certificate="my-certificate!")
+        assert ans == {'status': 400, 'message': "Something want wrong didnt updated successfully"}
+
+
 if __name__ == "__main__":
     TestGet()
     TestPost()
     TestPut()
     TestPatch()
     TestDelete()
+    TestComplexCases()

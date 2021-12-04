@@ -71,40 +71,10 @@ def create_function(func_name, bot_permission, default_value=''):
             func_name: default_value
         }
     save_to_json(func, "logic.json", "a")
-    exist = auth.check_if_func_exists(bot_type=bot_permission,func=func_name)
+    exist = auth.check_if_func_exists(bot_type=bot_permission, func=func_name)
     if not exist:
         add_intent_and_permissions(bot_permission, func_name, func)
         return {'status': 201, 'message': "Function added successfully"}
     else:
-        return {'status': 409, 'message': "Function already exist in the bot"}
+        return {'status': 400, 'message': "Something want wrong didnt post successfully"}
 
-
-
-def create_play_sound_function(bot_permission, sound="Lalalala"):
-    """
-    creating the play sound function for bot1
-    :param bot_permission: (string)  bot1
-    :param sound: (string) the sound to play
-    """
-    play_sound = {
-        "play_sound": "Playing " + sound
-    }
-    save_to_json(play_sound, "logic.json", "a")
-
-    # add function to bot1
-    add_intent_and_permissions('bot1', 'play_sound', play_sound)
-
-
-def create_default_welcome_message_function(bot_permission, default_welcome_message="Hello"):
-    """
-    creating the default welcome message function of bot2
-    :param bot_permission: (string) bot2
-    :param default_welcome_message: (string) the default welcome
-    """
-    default_welcome_message = {
-        "default_welcome_message": default_welcome_message
-    }
-    save_to_json(default_welcome_message, "logic.json", "a")
-
-    # add function to bot2
-    add_intent_and_permissions('bot2', 'default_welcome_message', default_welcome_message)

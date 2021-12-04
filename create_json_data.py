@@ -22,7 +22,6 @@ def create_bots():
 
     bot2 = {
         "allOf": my_base_bot,
-        "welcome_message": "Hello (default message)",
         "functions": {}
     }
     ct.save_to_json(bot2, "bot2.json", "w")
@@ -65,8 +64,10 @@ def add_intent():
     json.dump(bot2, f)
     f.close()
 
+
 def run():
     create_bots()
-    ct.create_play_sound_function(bot_permission="bot1")
-    ct.create_default_welcome_message_function(bot_permission="bot2")
-    ct.create_function(func_name="make_api_call", bot_permission="bot3")
+    ct.create_function(func_name="play_sound", bot_permission="bot1", default_value="Lalalala")
+    ct.create_function(func_name="default_welcome_message", bot_permission="bot2",
+                       default_value="Hello (default message)")
+    ct.create_function(func_name="make_api_call", bot_permission="bot3", default_value="making an api call")

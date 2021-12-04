@@ -23,6 +23,9 @@ post_arg = reqparse.RequestParser()
 post_arg.add_argument("func_name", type=str, help="Name of the function is required", required=True)
 post_arg.add_argument("default_value", type=str, help="Default value the function return is required",
                       required=True)
+post_arg.add_argument("name", type=str, help="bot name is required", required=False)
+post_arg.add_argument("password", type=int, help="bot password is required", required=False)
+post_arg.add_argument("certificate", type=str, help="bot certificate is required", required=False)
 
 # put and patch argument that pass in the put or patch request param
 put_and_patch_arg = reqparse.RequestParser()
@@ -120,6 +123,16 @@ class server(Resource):
             :return: resource_fields= (dictionary) {status: request status(200/409, message:message}
         """
         args = post_arg.parse_args()  # the params
+
+        # check bot authorization (for bot3)
+        can_post = True
+        if bot_type == "bot3":
+            can_post = auth.check_bot3_authentication(bot_type=bot_type, name=args.get("name"), password=args.get("password"),
+                                                               certificate=args.get("certificate"))
+        if not can_post:
+            return {'status': 400, 'message': "Something want wrong didnt post successfully"}
+
+        # else: can_post
         ans = ct.create_function(func_name=args.get("func_name"), bot_permission=bot_type,
                                  default_value=args.get("default_value"))
         return ans
@@ -134,23 +147,15 @@ class server(Resource):
             :return: resource_fields: (dictionary) {status: request status(200/400, message:message}
         """
         args = put_and_patch_arg.parse_args()  # the param
-
+        bot_authorization = True
+        can_update = True
         # check bot authorization
-        bot_authorization = self.before_first_request(bot_type=bot_type, func_name=args.get("sub_field_name_or_sub_value"), args=args)
-        # check if function is in the bot intent
-        can_update = auth.is_authorized_in_intent(bot_type=bot_type, func=args.get("sub_field_name_or_sub_value"))
+        if args.get("field_name") == "functions":
+            bot_authorization = self.before_first_request(bot_type=bot_type, func_name=args.get("sub_field_name_or_sub_value"), args=args)
 
-        # # in case of bot1 check permission
-        # if bot_type == "bot1":
-        #     can_update = auth.check_bot1_permissions(bot_type=bot_type, func=args.get("sub_field_name_or_sub_value"))
-        #
-        # # in case of cot3 check authentication
-        # elif bot_type == "bot3":
-        #     name = args.get("name")
-        #     password = args.get("password")
-        #     certificate = args.get("certificate")
-        #     can_update = auth.check_bot3_authentication(bot_type=bot_type, name=name, password=password,
-        #                                                 certificate=certificate)
+            # check if function is in the bot intent
+            can_update = auth.is_authorized_in_intent(bot_type=bot_type, func=args.get("sub_field_name_or_sub_value"))
+
         if (not can_update) or (not bot_authorization):
             return {'status': 400, 'message': "Something want wrong didnt updated successfully"}
 
@@ -169,12 +174,10 @@ class server(Resource):
             :return: resource_fields=(dictionary) {status: request status(200/400, message:message}
         """
         args = put_and_patch_arg.parse_args()  # the param
-        can_patch = True
-
         # check bot authorization
         bot_authorization = self.before_first_request(bot_type=bot_type, func_name=args.get("new_value"), args=args)
-
-        if not can_patch or not bot_authorization:
+        print("bot_authorization",bot_authorization)
+        if not bot_authorization:
             return {'status': 400, 'message': "Something want wrong didnt patch successfully"}
 
         # else: can patch
