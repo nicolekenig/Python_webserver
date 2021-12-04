@@ -70,7 +70,6 @@ def create_function(func_name, bot_permission, default_value=''):
         func = {
             func_name: default_value
         }
-    save_to_json(func, "logic.json", "a")
     exist = auth.check_if_func_exists(bot_type=bot_permission, func=func_name)
     if not exist:
         add_intent_and_permissions(bot_permission, func_name, func)

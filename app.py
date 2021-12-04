@@ -1,5 +1,5 @@
 # import the Flask class from the flask module
-from flask import Flask, render_template
+from flask import Flask, request
 from flask_restful import Api, Resource, reqparse, marshal_with, fields
 import auth
 import create_json_data
@@ -7,7 +7,7 @@ import utils
 import create_task as ct
 
 # create the application object
-app = Flask(__name__, template_folder="templates")
+app = Flask(__name__)
 # create the api using Flask
 api = Api(app)
 
@@ -127,8 +127,9 @@ class server(Resource):
         # check bot authorization (for bot3)
         can_post = True
         if bot_type == "bot3":
-            can_post = auth.check_bot3_authentication(bot_type=bot_type, name=args.get("name"), password=args.get("password"),
-                                                               certificate=args.get("certificate"))
+            can_post = auth.check_bot3_authentication(bot_type=bot_type, name=args.get("name"),
+                                                      password=args.get("password"),
+                                                      certificate=args.get("certificate"))
         if not can_post:
             return {'status': 400, 'message': "Something want wrong didnt post successfully"}
 
@@ -151,7 +152,8 @@ class server(Resource):
         can_update = True
         # check bot authorization
         if args.get("field_name") == "functions":
-            bot_authorization = self.before_first_request(bot_type=bot_type, func_name=args.get("sub_field_name_or_sub_value"), args=args)
+            bot_authorization = self.before_first_request(bot_type=bot_type,
+                                                          func_name=args.get("sub_field_name_or_sub_value"), args=args)
 
             # check if function is in the bot intent
             can_update = auth.is_authorized_in_intent(bot_type=bot_type, func=args.get("sub_field_name_or_sub_value"))
@@ -176,7 +178,7 @@ class server(Resource):
         args = put_and_patch_arg.parse_args()  # the param
         # check bot authorization
         bot_authorization = self.before_first_request(bot_type=bot_type, func_name=args.get("new_value"), args=args)
-        print("bot_authorization",bot_authorization)
+        print("bot_authorization", bot_authorization)
         if not bot_authorization:
             return {'status': 400, 'message': "Something want wrong didnt patch successfully"}
 
@@ -201,6 +203,7 @@ class server(Resource):
 # api resource
 api.add_resource(server, "/botHandler/<string:bot_type>")
 
+
 # If we're running in stand alone mode, run the application
 if __name__ == '__main__':
     # create all the bots JSON file and there functions
@@ -208,3 +211,4 @@ if __name__ == '__main__':
 
     # start the server with the 'run()' method
     app.run(port=5000, debug=True)
+

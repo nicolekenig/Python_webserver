@@ -1,348 +1,223 @@
 import pytest
 import requests
 
-import create_json_data
-
 BASE = 'http://127.0.0.1:5000/botHandler/'
 
 
-# ------------------------------------------- sub tests for get -------------------------------------------
-def get_function(base_url, bot, func_name, name='', password=0, certificate=''):
-    if func_name != "make_api_call":
-        func_name = {
-            "func_name": func_name
-        }
-    else:
-        func_name = {
-            "func_name": func_name,
-            "name": name,
-            "password": password,
-            "certificate": certificate
-        }
-    url = base_url + bot
-    resp = requests.get(url, func_name)
-    return resp.json()
+# ------------------------------------------- get test -------------------------------------------
+@pytest.mark.parametrize("url, data_for_get, expected_result", [
+    (BASE + "bot1", {"func_name": "play_sound"}, {'status': 200, 'message': "Lalalala"}),
+    (BASE + "bot2", {"func_name": "default_welcome_message"}, {'status': 200, 'message': "Hello (default message)"}),
+    (BASE + "bot3", {"func_name": "make_api_call", "name": "my_bot", "password": 46543},
+     {'status': 200, 'message': "making an api call"}),
+
+    (BASE + "bot1", {"func_name": "default_welcome_message"},
+     {'status': 401, 'message': "You dont have permission for this function"}),
+    (BASE + "bot2", {"func_name": "play_sound"},
+     {'status': 401, 'message': "You dont have permission for this function"}),
+    (BASE + "bot3", {"func_name": "default_welcome_message"},
+     {'status': 401, 'message': "You dont have permission for this function"}),
+
+    (BASE + "bot1", {"func_name": "make_api_call"},
+     {'status': 401, 'message': "You dont have permission for this function"}),
+    (BASE + "bot2", {"func_name": "make_api_call"},
+     {'status': 401, 'message': "You dont have permission for this function"}),
+    (BASE + "bot3", {"func_name": "play_sound"},
+     {'status': 401, 'message': "You dont have permission for this function"}),
+
+    (BASE + "bot3", {"func_name": "make_api_call", "name": "not_my_name", "password": 46543},
+     {'status': 401, 'message': "You dont have permission for this function"}),
+    (BASE + "bot3", {"func_name": "make_api_call", "name": "my_bot", "password": 1111},
+     {'status': 401, 'message': "You dont have permission for this function"}),
+    (BASE + "bot3", {"func_name": "make_api_call", "name": "not_my_name", "password": 1111},
+     {'status': 401, 'message': "You dont have permission for this function"}),
+])
+def test_get(url, data_for_get, expected_result):
+    resp = requests.get(url, data_for_get)
+    assert resp.json() == expected_result
 
 
-# ------------------------------------------- sub tests for post -------------------------------------------
-def post_new_function(base_url, bot, func_name, default_value, name='', password=0, certificate=''):
-    url = base_url + bot
-    if bot != "bot3":
-        param = {
-            "func_name": func_name,
-            "default_value": default_value
-        }
-    else:
-        param = {
-            "func_name": func_name,
-            "default_value": default_value,
-            "name": name,
-            "password": password,
-            "certificate": certificate
-        }
-    resp = requests.post(url, param)
-    return resp.json()
+# ------------------------------------------- post test -------------------------------------------
+@pytest.mark.parametrize("url, data_for_post, expected_result", [
+    (BASE + "bot1", {"func_name": "drink", "default_value": "water"},
+     {'status': 201, 'message': "Function added successfully"}),
+    (BASE + "bot2", {"func_name": "play_movie", "default_value": "Harry Potter"},
+     {'status': 201, 'message': "Function added successfully"}),
+    (BASE + "bot3",
+     {"func_name": "next_meeting_location", "default_value": "New York", "name": "my_bot", "password": 46543},
+     {'status': 201, 'message': "Function added successfully"}),
+
+    (BASE + "bot1", {"func_name": "drink", "default_value": "water"},
+     {'status': 400, 'message': "Something want wrong didnt post successfully"}),
+    (BASE + "bot2", {"func_name": "default_welcome_message", "default_value": "new message"},
+     {'status': 400, 'message': "Something want wrong didnt post successfully"}),
+    (BASE + "bot3",
+     {"func_name": "next_meeting_location", "default_value": "Loa Angeles", "name": "my_bot", "password": 46543},
+     {'status': 400, 'message': "Something want wrong didnt post successfully"}),
+
+    (BASE + "bot3",
+     {"func_name": "next_meeting_location", "default_value": "New York", "name": "not_my_bot", "password": 46543},
+     {'status': 400, 'message': "Something want wrong didnt post successfully"}),
+    (BASE + "bot3",
+     {"func_name": "next_meeting_location", "default_value": "New York", "name": "my_bot", "password": 1111},
+     {'status': 400, 'message': "Something want wrong didnt post successfully"}),
+    (BASE + "bot3",
+     {"func_name": "next_meeting_location", "default_value": "Loa Angeles", "name": "not_my_bot", "password": 1111},
+     {'status': 400, 'message': "Something want wrong didnt post successfully"}),
+])
+def test_post(url, data_for_post, expected_result):
+    resp = requests.post(url, data_for_post)
+    assert resp.json() == expected_result
 
 
-# ------------------------------------------- sub tests for put -------------------------------------------
-def put_new_value(base_url, bot, field_name, new_value, sub_field_name_or_sub_value='', name='', password=0,
-                  certificate=''):
-    url = base_url + bot
-    if bot != "bot3":
-        put_details = {
-            "field_name": field_name,
-            "new_value": new_value,
-            "sub_field_name_or_sub_value": sub_field_name_or_sub_value,
-        }
-    else:
-        put_details = {
-            "field_name": field_name,
-            "new_value": new_value,
-            "sub_field_name_or_sub_value": sub_field_name_or_sub_value,
-            "name": name,
-            "password": password,
-            "certificate": certificate
-        }
-    resp = requests.put(url, put_details)
-    return resp.json()
+# ------------------------------------------- put test -------------------------------------------
+@pytest.mark.parametrize("url, data_for_put, expected_result", [
+    (
+            BASE + "bot1",
+            {"field_name": "functions", "new_value": "Bom bom bom", "sub_field_name_or_sub_value": "play_sound"},
+            {'status': 200, 'message': "Updated successfully"}),
+    (BASE + "bot2", {"field_name": "functions", "new_value": "Hi, this is my new welcome massage",
+                     "sub_field_name_or_sub_value": "default_welcome_message"},
+     {'status': 200, 'message': "Updated successfully"}),
+
+    (BASE + "bot1", {"field_name": "name", "new_value": "my_bot1"}, {'status': 200, 'message': "Updated successfully"}),
+    (BASE + "bot2", {"field_name": "name", "new_value": "my_bot2"}, {'status': 200, 'message': "Updated successfully"}),
+    (BASE + "bot3", {"field_name": "name", "new_value": "my_bot3", "name": "my_bot", "password": 46543},
+     {'status': 200, 'message': "Updated successfully"}),
+
+    (BASE + "bot1", {"field_name": "functions", "new_value": "Hi, this is my new welcome massage",
+                     "sub_field_name_or_sub_value": "default_welcome_message"},
+     {'status': 400, 'message': "Something want wrong didnt updated successfully"}),
+    (
+            BASE + "bot2",
+            {"field_name": "functions", "new_value": "Bom Bom Bom", "sub_field_name_or_sub_value": "play_sound"},
+            {'status': 400, 'message': "Something want wrong didnt updated successfully"}),
+    (BASE + "bot3", {"field_name": "functions", "new_value": "play_sound", "sub_field_name_or_sub_value": "play_sound",
+                     "name": "my_bot3", "password": 46543},
+     {'status': 400, 'message': "Something want wrong didnt updated successfully"}),
+])
+def test_put(url, data_for_put, expected_result):
+    resp = requests.put(url, data_for_put)
+    assert resp.json() == expected_result
 
 
-# ------------------------------------------- sub tests for patch -------------------------------------------
-def patch_new_value(base_url, bot, field_name, new_value, sub_field_name_or_sub_value='', name='', password=0,
-                    certificate=''):
-    url = base_url + bot
-    if bot != "bot3":
-        patch_details = {
-            "field_name": field_name,
-            "new_value": new_value,
-            "sub_field_name_or_sub_value": sub_field_name_or_sub_value
-        }
-    else:
-        patch_details = {
-            "field_name": field_name,
-            "new_value": new_value,
-            "sub_field_name_or_sub_value": sub_field_name_or_sub_value,
-            "name": name,
-            "password": password,
-            "certificate": certificate
-        }
-    resp = requests.patch(url, patch_details)
-    return resp.json()
+# ------------------------------------------- patch test -------------------------------------------
+@pytest.mark.parametrize("url, data_for_patch, expected_result", [
+    (BASE + "bot1", {"field_name": "intent", "new_value": "play_sound"},
+     {'status': 200, 'message': "Patch successfully"}),
+    (BASE + "bot2", {"field_name": "intent", "new_value": "default_welcome_message"},
+     {'status': 200, 'message': "Patch successfully"}),
+    (BASE + "bot3", {"field_name": "intent", "new_value": "make_api_call", "name": "my_bot3", "password": 46543},
+     {'status': 200, 'message': "Patch successfully"}),
+
+    (BASE + "bot1", {"field_name": "intent", "new_value": "play_sound"},
+     {'status': 200, 'message': "Patch successfully"}),
+    (BASE + "bot2", {"field_name": "intent", "new_value": "default_welcome_message"},
+     {'status': 200, 'message': "Patch successfully"}),
+    (BASE + "bot3", {"field_name": "intent", "new_value": "make_api_call", "name": "my_bot3", "password": 46543},
+     {'status': 200, 'message': "Patch successfully"}),
+
+    (BASE + "bot1", {"field_name": "intent", "new_value": "default_welcome_message"},
+     {'status': 400, 'message': "Something want wrong didnt patch successfully"}),
+    (BASE + "bot2", {"field_name": "intent", "new_value": "play_sound"},
+     {'status': 400, 'message': "Something want wrong didnt patch successfully"}),
+    (BASE + "bot3", {"field_name": "intent", "new_value": "make_api_call"},
+     {'status': 400, 'message': "Something want wrong didnt patch successfully"}),
+
+    (BASE + "bot3", {"field_name": "intent", "new_value": "make_api_call", "name": "not_my_bot", "password": 46543},
+     {'status': 400, 'message': "Something want wrong didnt patch successfully"}),
+    (BASE + "bot3", {"field_name": "intent", "new_value": "make_api_call", "name": "my_bot3", "password": 1111},
+     {'status': 400, 'message': "Something want wrong didnt patch successfully"}),
+    (BASE + "bot3", {"field_name": "intent", "new_value": "make_api_call", "name": "not_my_bot", "password": 1111},
+     {'status': 400, 'message': "Something want wrong didnt patch successfully"}),
+
+    (BASE + "bot3",
+     {"field_name": "is_basic_authentication", "new_value": "False", "name": "my_bot3", "password": 46543},
+     {'status': 200, 'message': "Patch successfully"}),
+    (BASE + "bot3",
+     {"field_name": "is_basic_authentication", "new_value": "False", "name": "my_bot3", "password": 11111},
+     {'status': 400, 'message': "Something want wrong didnt patch successfully"}),
+
+])
+def test_patch(url, data_for_patch, expected_result):
+    resp = requests.patch(url, data_for_patch)
+    assert resp.json() == expected_result
 
 
-# ------------------------------------------- sub tests for delete -------------------------------------------
-def delete_json(delete_url, bot):
-    url = delete_url + bot
+# ------------------------------------------- bot3 complex test -------------------------------------------
+@pytest.mark.parametrize("url, data_for_put_bot3_complex_test, expected_result", [
+    (BASE + "bot3", {"field_name": "name", "new_value": "my_bot", "name": "my_bot3_new_name", "password": 46543,
+                     "certificate": "my-certificate!"}, {'status': 200, 'message': "Updated successfully"}),
+
+    (BASE + "bot3", {"field_name": "functions", "new_value": "Bom bom bom", "sub_field_name_or_sub_value": "play_sound",
+                     "name": "my_bot3_new_name", "password": 46543, "certificate": "my-certificate!"},
+     {'status': 400, 'message': "Something want wrong didnt updated successfully"}),
+])
+def test_put_bot3_not_basic_auth(url, data_for_put_bot3_complex_test, expected_result):
+    resp = requests.put(url, data_for_put_bot3_complex_test)
+    assert resp.json() == expected_result
+
+
+@pytest.mark.parametrize("url, data_for_get_bot3_complex_test, expected_result", [
+    (BASE + "bot3",
+     {"func_name": "make_api_call", "name": "my_bot", "password": 46543, "certificate": "my-certificate!"},
+     {'status': 200, 'message': "making an api call"}),
+    (BASE + "bot3", {"func_name": "play_sound", "name": "my_bot", "password": 46543, "certificate": "my-certificate!"},
+     {'status': 401, 'message': "You dont have permission for this function"}),
+])
+def test_get_bot3_not_basic_auth(url, data_for_get_bot3_complex_test, expected_result):
+    resp = requests.get(url, data_for_get_bot3_complex_test)
+    assert resp.json() == expected_result
+
+
+@pytest.mark.parametrize("url, data_for_post_bot3_complex_test, expected_result", [
+    (BASE + "bot3",
+     {"func_name": "drink", "default_value": "cofe", "name": "my_bot", "password": 46543,
+      "certificate": "my-certificate!"},
+     {'status': 201, 'message': "Function added successfully"}),
+
+    (BASE + "bot3",
+     {"func_name": "next_meeting_location", "default_value": "Loa Angeles", "name": "my_bot3_new_name",
+      "password": 46543,
+      "certificate": "my-certificate!"},
+     {'status': 400, 'message': "Something want wrong didnt post successfully"}),
+
+    (BASE + "bot3",
+     {"func_name": "next_meeting_location", "default_value": "Loa Angeles", "name": "my_bot3_new_name",
+      "password": 46543,
+      "certificate": "not_my-certificate!"},
+     {'status': 400, 'message': "Something want wrong didnt post successfully"}),
+
+    (BASE + "bot3",
+     {"func_name": "next_meeting_location", "default_value": "Loa Angeles"},
+     {'status': 400, 'message': "Something want wrong didnt post successfully"}),
+])
+def test_post_bot3_not_basic_auth(url, data_for_post_bot3_complex_test, expected_result):
+    resp = requests.post(url, data_for_post_bot3_complex_test)
+    assert resp.json() == expected_result
+
+
+# ------------------------------------------- delete test -------------------------------------------
+@pytest.mark.parametrize("url, expected_result", [
+    (BASE + "bot1", {'status': 204, 'message': 'Bot deleted successfully'}),
+    (BASE + "bot2", {'status': 204, 'message': 'Bot deleted successfully'}),
+    (BASE + "bot3", {'status': 204, 'message': 'Bot deleted successfully'}),
+
+    (BASE + "bot1", {'status': 404, 'message': 'File dose not exist or could not deleted bot'}),
+    (BASE + "bot2", {'status': 404, 'message': 'File dose not exist or could not deleted bot'}),
+    (BASE + "bot3", {'status': 404, 'message': 'File dose not exist or could not deleted bot'}),
+])
+def test_delete(url, expected_result):
     resp = requests.delete(url)
-    return resp.json()
+    assert resp.json() == expected_result
 
 
-# ******************************************** get test ********************************************
-class TestGet:
-    def test1_get(self):
-        ans = get_function(base_url=BASE, bot="bot1", func_name="play_sound")
-        assert ans == {'status': 200, 'message': "Lalalala"}
-
-    def test2_get(self):
-        ans = get_function(base_url=BASE, bot="bot2", func_name="default_welcome_message")
-        assert ans == {'status': 200, 'message': "Hello (default message)"}
-
-    def test3_get(self):
-        ans = get_function(base_url=BASE, bot="bot3", func_name="make_api_call", name="my_bot", password=46543)
-        assert ans == {'status': 200, 'message': "making an api call"}
-
-    def test4_get(self):
-        ans = get_function(base_url=BASE, bot="bot1", func_name="default_welcome_message")
-        assert ans == {'status': 401, 'message': "You dont have permission for this function"}
-
-    def test5_get(self):
-        ans = get_function(base_url=BASE, bot="bot2", func_name="play_sound")
-        assert ans == {'status': 401, 'message': "You dont have permission for this function"}
-
-    def test6_get(self):
-        ans = get_function(base_url=BASE, bot="bot3", func_name="default_welcome_message")
-        assert ans == {'status': 401, 'message': "You dont have permission for this function"}
-
-    def test7_get(self):
-        ans = get_function(base_url=BASE, bot="bot1", func_name="make_api_call")
-        assert ans == {'status': 401, 'message': "You dont have permission for this function"}
-
-    def test8_get(self):
-        ans = get_function(base_url=BASE, bot="bot2", func_name="make_api_call")
-        assert ans == {'status': 401, 'message': "You dont have permission for this function"}
-
-    def test9_get(self):
-        ans = get_function(base_url=BASE, bot="bot3", func_name="play_sound")
-        assert ans == {'status': 401, 'message': "You dont have permission for this function"}
-
-    def test10_get(self):
-        ans = get_function(base_url=BASE, bot="bot3", func_name="make_api_call", name="not_my_name", password=46543)
-        assert ans == {'status': 401, 'message': "You dont have permission for this function"}
-
-    def test11_get(self):
-        ans = get_function(base_url=BASE, bot="bot3", func_name="make_api_call", name="my_bot", password=1111)
-        assert ans == {'status': 401, 'message': "You dont have permission for this function"}
-
-    def test12_get(self):
-        ans = get_function(base_url=BASE, bot="bot3", func_name="make_api_call", name="not_my_name", password=1111)
-        assert ans == {'status': 401, 'message': "You dont have permission for this function"}
-
-# ******************************************** post test ********************************************
-class TestPost:
-    def test1_post(self):
-        ans = post_new_function(base_url=BASE, bot="bot1", func_name="drink", default_value="water")
-        assert ans == {'status': 201, 'message': "Function added successfully"}
-
-    def test2_post(self):
-        ans = post_new_function(base_url=BASE, bot="bot2", func_name="play_movie", default_value="Harry Potter")
-        assert ans == {'status': 201, 'message': "Function added successfully"}
-
-    def test3_post(self):
-        ans = post_new_function(base_url=BASE, bot="bot3", func_name="next_meeting_location", default_value="New York",
-                                name='my_bot', password=46543)
-        assert ans == {'status': 201, 'message': "Function added successfully"}
-
-    def test4_post(self):
-        ans = post_new_function(base_url=BASE, bot="bot1", func_name="drink", default_value="water")
-        assert ans == {'status': 400, 'message': "Something want wrong didnt post successfully"}
-
-    def test5_post(self):
-        ans = post_new_function(base_url=BASE, bot="bot2", func_name="default_welcome_message",
-                                default_value="new message")
-        assert ans == {'status': 400, 'message': "Something want wrong didnt post successfully"}
-
-    def test6_post(self):
-        ans = post_new_function(base_url=BASE, bot="bot3", func_name="next_meeting_location",
-                                default_value="Los Angeles")
-        assert ans == {'status': 400, 'message': "Something want wrong didnt post successfully"}
-
-
-# ******************************************** put test ********************************************
-class TestPut:
-    def test1_put(self):
-        ans = put_new_value(base_url=BASE, bot="bot1", field_name="functions", new_value="Bom bom bom",
-                            sub_field_name_or_sub_value="play_sound")
-        assert ans == {'status': 200, 'message': "Updated successfully"}
-
-    def test2_put(self):
-        ans = put_new_value(base_url=BASE, bot="bot2", field_name="functions",
-                            new_value="Hi, this is my new welcome massage",
-                            sub_field_name_or_sub_value="default_welcome_message")
-        assert ans == {'status': 200, 'message': "Updated successfully"}
-
-    def test3_put(self):
-        ans = put_new_value(base_url=BASE, bot="bot1", field_name="name", new_value="my_bot1")
-        assert ans == {'status': 200, 'message': "Updated successfully"}
-
-    def test4_put(self):
-        ans = put_new_value(base_url=BASE, bot="bot2", field_name="name", new_value="my_bot2")
-        assert ans == {'status': 200, 'message': "Updated successfully"}
-
-    def test5_put(self):
-        ans = put_new_value(base_url=BASE, bot="bot3", field_name="name", new_value="my_bot3", name='my_bot', password=46543)
-        assert ans == {'status': 200, 'message': "Updated successfully"}
-
-    def test6_put(self):
-        ans = put_new_value(base_url=BASE, bot="bot1", field_name="functions",
-                            new_value="Hi, this is my new welcome massage", sub_field_name_or_sub_value="Not_bot1_func")
-        assert ans == {'status': 400, 'message': "Something want wrong didnt updated successfully"}
-
-    def test7_put(self):
-        ans = put_new_value(base_url=BASE, bot="bot2", field_name="functions", new_value="Bom bom bom",
-                            sub_field_name_or_sub_value="Not_bot2_func")
-        assert ans == {'status': 400, 'message': "Something want wrong didnt updated successfully"}
-
-    def test8_put(self):
-        ans = put_new_value(base_url=BASE, bot="bot3", field_name="functions", new_value="Bom bom bom",
-                            sub_field_name_or_sub_value="Not_bot3_func", name='my_bot3', password=46543)
-        assert ans == {'status': 400, 'message': "Something want wrong didnt updated successfully"}
-
-
-# ******************************************** patch test ********************************************
-class TestPatch:
-    def test1_patch(self):
-        ans = patch_new_value(base_url=BASE, bot="bot1", field_name="intent", new_value="play_sound")
-        assert ans == {'status': 200, 'message': "Patch successfully"}
-
-    def test2_patch(self):
-        ans = patch_new_value(base_url=BASE, bot="bot2", field_name="intent", new_value="default_welcome_message")
-        assert ans == {'status': 200, 'message': "Patch successfully"}
-
-    def test3_patch(self):
-        ans = patch_new_value(base_url=BASE, bot="bot3", field_name="intent", new_value="make_api_call", name="my_bot3",
-                              password=46543)
-        assert ans == {'status': 200, 'message': "Patch successfully"}
-
-    def test4_patch(self):
-        ans = patch_new_value(base_url=BASE, bot="bot1", field_name="intent", new_value="play_sound")
-        assert ans == {'status': 200, 'message': "Patch successfully"}
-
-    def test5_patch(self):
-        ans = patch_new_value(base_url=BASE, bot="bot2", field_name="intent", new_value="default_welcome_message")
-        assert ans == {'status': 200, 'message': "Patch successfully"}
-
-    def test6_patch(self):
-        ans = patch_new_value(base_url=BASE, bot="bot3", field_name="intent", new_value="make_api_call", name="my_bot3",
-                              password=46543)
-        assert ans == {'status': 200, 'message': "Patch successfully"}
-
-    def test7_patch(self):
-        ans = patch_new_value(base_url=BASE, bot="bot1", field_name="intent", new_value="default_welcome_message")
-        assert ans == {'status': 400, 'message': "Something want wrong didnt patch successfully"}
-
-    def test8_patch(self):
-        ans = patch_new_value(base_url=BASE, bot="bot2", field_name="intent", new_value="play_sound")
-        assert ans == {'status': 400, 'message': "Something want wrong didnt patch successfully"}
-
-    def test9_patch(self):
-        ans = patch_new_value(base_url=BASE, bot="bot3", field_name="intent", new_value="make_api_call")
-        assert ans == {'status': 400, 'message': "Something want wrong didnt patch successfully"}
-
-    def test10_patch(self):
-        ans = patch_new_value(base_url=BASE, bot="bot3", field_name="intent", new_value="make_api_call",
-                              name="not_my_name", password=46543)
-        assert ans == {'status': 400, 'message': "Something want wrong didnt patch successfully"}
-
-    def test11_patch(self):
-        ans = patch_new_value(base_url=BASE, bot="bot3", field_name="intent", new_value="make_api_call", name="my_bot",
-                              password=111)
-        assert ans == {'status': 400, 'message': "Something want wrong didnt patch successfully"}
-
-    def test12_patch(self):
-        ans = patch_new_value(base_url=BASE, bot="bot3", field_name="intent", new_value="make_api_call",
-                              name="not_my_name", password=111)
-        assert ans == {'status': 400, 'message': "Something want wrong didnt patch successfully"}
-
-
-# ******************************************** delete test ********************************************
-class TestDelete:
-    def test1_delete(self):
-        ans = delete_json(delete_url=BASE, bot="bot1")
-        assert ans == {'status': 204, 'message': 'Bot deleted successfully'}
-
-    def test2_delete(self):
-        ans = delete_json(delete_url=BASE, bot="bot2")
-        assert ans == {'status': 204, 'message': 'Bot deleted successfully'}
-
-    def test3_delete(self):
-        ans = delete_json(delete_url=BASE, bot="bot3")
-        assert ans == {'status': 204, 'message': 'Bot deleted successfully'}
-
-    def test4_delete(self):
-        ans = delete_json(delete_url=BASE, bot="logic")
-        assert ans == {'status': 204, 'message': 'Bot deleted successfully'}
-
-    def test5_delete(self):
-        ans = delete_json(delete_url=BASE, bot="bot1")
-        assert ans == {'status': 404, 'message': 'File dose not exist or could not deleted bot'}
-
-    def test6_delete(self):
-        ans = delete_json(delete_url=BASE, bot="bot2")
-        assert ans == {'status': 404, 'message': 'File dose not exist or could not deleted bot'}
-
-    def test7_delete(self):
-        ans = delete_json(delete_url=BASE, bot="bot3")
-        assert ans == {'status': 404, 'message': 'File dose not exist or could not deleted bot'}
-
-    def test8_delete(self):
-        ans = delete_json(delete_url=BASE, bot="logic")
-        assert ans == {'status': 404, 'message': 'File dose not exist or could not deleted bot'}
-
-
-# ******************************************** complex test ********************************************
-class TestComplexCases:
-    def test1_bot3_not_basic_auth(self):
-        create_json_data.run()
-        ans = patch_new_value(base_url=BASE, bot="bot3", field_name="is_basic_authentication", new_value="False", name="my_bot",
-                              password=46543)
-        assert ans == {'status': 200, 'message': "Patch successfully"}
-
-        ans = put_new_value(base_url=BASE, bot="bot3", field_name="name", new_value="my_bot3", name='my_bot', password=46543,certificate="my-certificate!")
-        assert ans == {'status': 200, 'message': "Updated successfully"}
-
-        ans = get_function(base_url=BASE, bot="bot3", func_name="make_api_call", name="my_bot3", password=46543, certificate="my-certificate!")
-        assert ans == {'status': 200, 'message': "making an api call"}
-
-        ans = get_function(base_url=BASE, bot="bot3", func_name="play_sound", name="my_bot3", password=46543, certificate="my-certificate!")
-        assert ans == {'status': 401, 'message': "You dont have permission for this function"}
-
-        ans = post_new_function(base_url=BASE, bot="bot3", func_name="next_meeting_location", default_value="New York",
-                                name='my_bot3', password=46543, certificate="my-certificate!")
-        assert ans == {'status': 201, 'message': "Function added successfully"}
-
-        ans = post_new_function(base_url=BASE, bot="bot3", func_name="next_meeting_location",
-                                default_value="Los Angeles")
-        assert ans == {'status': 400, 'message': "Something want wrong didnt post successfully"}
-
-        ans = put_new_value(base_url=BASE, bot="bot3", field_name="functions", new_value="Bom bom bom",
-                            sub_field_name_or_sub_value="Not_bot3_func",name="my_bot3", password=46543, certificate="my-certificate!")
-        assert ans == {'status': 400, 'message': "Something want wrong didnt updated successfully"}
-
-
-if __name__ == "__main__":
-    TestGet()
-    TestPost()
-    TestPut()
-    TestPatch()
-    TestDelete()
-    TestComplexCases()
+if __name__ == '__main__':
+    test_get()
+    test_post()
+    test_put()
+    test_patch()
+    test_put_bot3_not_basic_auth()
+    test_get_bot3_not_basic_auth()
+    test_post_bot3_not_basic_auth()
+    test_delete()
