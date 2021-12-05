@@ -31,6 +31,9 @@ BASE = 'http://127.0.0.1:5000/botHandler/'
      {'status': 401, 'message': "You dont have permission for this function"}),
     (BASE + "bot3", {"func_name": "make_api_call", "name": "not_my_name", "password": 1111},
      {'status': 401, 'message': "You dont have permission for this function"}),
+
+    (BASE + "bot4", {"func_name": "default_welcome_message"}, {'status': 401, 'message': "You dont have permission for this function"}),
+
 ])
 def test_get(url, data_for_get, expected_result):
     resp = requests.get(url, data_for_get)
@@ -64,6 +67,9 @@ def test_get(url, data_for_get, expected_result):
     (BASE + "bot3",
      {"func_name": "next_meeting_location", "default_value": "Loa Angeles", "name": "not_my_bot", "password": 1111},
      {'status': 400, 'message': "Something want wrong didnt post successfully"}),
+
+    (BASE + "bot4", {"func_name": "drink", "default_value": "water"},
+        {'status': 400, 'message': "Something want wrong didnt post successfully"}),
 ])
 def test_post(url, data_for_post, expected_result):
     resp = requests.post(url, data_for_post)
@@ -72,10 +78,9 @@ def test_post(url, data_for_post, expected_result):
 
 # ------------------------------------------- put test -------------------------------------------
 @pytest.mark.parametrize("url, data_for_put, expected_result", [
-    (
-            BASE + "bot1",
-            {"field_name": "functions", "new_value": "Bom bom bom", "sub_field_name_or_sub_value": "play_sound"},
-            {'status': 200, 'message': "Updated successfully"}),
+    (BASE + "bot1",
+    {"field_name": "functions", "new_value": "Bom bom bom", "sub_field_name_or_sub_value": "play_sound"},
+    {'status': 200, 'message': "Updated successfully"}),
     (BASE + "bot2", {"field_name": "functions", "new_value": "Hi, this is my new welcome massage",
                      "sub_field_name_or_sub_value": "default_welcome_message"},
      {'status': 200, 'message': "Updated successfully"}),
@@ -94,6 +99,10 @@ def test_post(url, data_for_post, expected_result):
             {'status': 400, 'message': "Something want wrong didnt updated successfully"}),
     (BASE + "bot3", {"field_name": "functions", "new_value": "play_sound", "sub_field_name_or_sub_value": "play_sound",
                      "name": "my_bot3", "password": 46543},
+     {'status': 400, 'message': "Something want wrong didnt updated successfully"}),
+
+    (BASE + "bot4", {"field_name": "functions", "new_value": "Hi, this is my new welcome massage",
+                     "sub_field_name_or_sub_value": "default_welcome_message"},
      {'status': 400, 'message': "Something want wrong didnt updated successfully"}),
 ])
 def test_put(url, data_for_put, expected_result):
@@ -136,6 +145,9 @@ def test_put(url, data_for_put, expected_result):
      {'status': 200, 'message': "Patch successfully"}),
     (BASE + "bot3",
      {"field_name": "is_basic_authentication", "new_value": "False", "name": "my_bot3", "password": 11111},
+     {'status': 400, 'message': "Something want wrong didnt patch successfully"}),
+
+    (BASE + "bot4", {"field_name": "intent", "new_value": "default_welcome_message"},
      {'status': 400, 'message': "Something want wrong didnt patch successfully"}),
 
 ])

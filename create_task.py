@@ -62,18 +62,21 @@ def create_function(func_name, bot_permission, default_value=''):
     :param default_value:  (string) the default return value of the function
     :return response status and message:(dictionary) {status:201/409, message:message}
     """
-    if default_value is '':
-        func = {
-            func_name: "This is the " + func_name + " function"
-        }
-    else:
-        func = {
-            func_name: default_value
-        }
-    exist = auth.check_if_func_exists(bot_type=bot_permission, func=func_name)
-    if not exist:
-        add_intent_and_permissions(bot_permission, func_name, func)
-        return {'status': 201, 'message': "Function added successfully"}
-    else:
+    try:
+        if default_value is '':
+            func = {
+                func_name: "This is the " + func_name + " function"
+            }
+        else:
+            func = {
+                func_name: default_value
+            }
+        exist = auth.check_if_func_exists(bot_type=bot_permission, func=func_name)
+        if not exist:
+            add_intent_and_permissions(bot_permission, func_name, func)
+            return {'status': 201, 'message': "Function added successfully"}
+        else:
+            return {'status': 400, 'message': "Something want wrong didnt post successfully"}
+    except:
         return {'status': 400, 'message': "Something want wrong didnt post successfully"}
 

@@ -11,10 +11,13 @@ def is_authorized_in_intent(bot_type, func):
             False - he function isn't in the bot intent
     """
     # get bot permissions_list
-    f = open(bot_type + '.json')
-    bot_dict = json.load(f)
-    intent_list = bot_dict["allOf"]["intent"]
-    return func in intent_list
+    try:
+        f = open(bot_type + '.json')
+        bot_dict = json.load(f)
+        intent_list = bot_dict["allOf"]["intent"]
+        return func in intent_list
+    except:
+        return False
 
 
 def check_bot1_permissions(bot_type, func):
@@ -25,11 +28,14 @@ def check_bot1_permissions(bot_type, func):
     :return: True- bot1 have permission to accesses the function
             False - bot1 dose not have permission to accesses the function
     """
-    # get bot permissions_list
-    f = open(bot_type + '.json')
-    bot_dict = json.load(f)
-    permissions_list = bot_dict["permissions_list"]
-    return func in permissions_list
+    try:
+        # get bot permissions_list
+        f = open(bot_type + '.json')
+        bot_dict = json.load(f)
+        permissions_list = bot_dict["permissions_list"]
+        return func in permissions_list
+    except:
+        return False
 
 
 def check_bot3_authentication(bot_type, name, password, certificate):
@@ -42,19 +48,22 @@ def check_bot3_authentication(bot_type, name, password, certificate):
     :return: True - the details are correct
             False - the details are wrong
     """
-    f = open(bot_type + '.json')
-    bot_dict = json.load(f)
-    is_basic_authentication = bot_dict["is_basic_authentication"]
-    is_name_valid = bot_dict["allOf"]["name"] == name
-    is_password_valid = bot_dict["password"] == password
-    is_certificate_valid = True
+    try:
+        f = open(bot_type + '.json')
+        bot_dict = json.load(f)
+        is_basic_authentication = bot_dict["is_basic_authentication"]
+        is_name_valid = bot_dict["allOf"]["name"] == name
+        is_password_valid = bot_dict["password"] == password
+        is_certificate_valid = True
 
-    if not is_basic_authentication:
-        is_certificate_valid = bot_dict['certificate'] == certificate
+        if not is_basic_authentication:
+            is_certificate_valid = bot_dict['certificate'] == certificate
 
-    if is_name_valid and is_password_valid and is_certificate_valid:
-        return True
-    else:
+        if is_name_valid and is_password_valid and is_certificate_valid:
+            return True
+        else:
+            return False
+    except:
         return False
 
 
@@ -66,8 +75,11 @@ def check_if_func_exists(bot_type, func):
     :return: True - the function exists in the bot functions
             False - the function dont exists in the bot functions
     """
-    # get bot permissions_list
-    f = open(bot_type + '.json')
-    bot_dict = json.load(f)
-    functions_list = bot_dict["functions"]
-    return func in functions_list
+    try:
+        # get bot permissions_list
+        f = open(bot_type + '.json')
+        bot_dict = json.load(f)
+        functions_list = bot_dict["functions"]
+        return func in functions_list
+    except:
+        return False

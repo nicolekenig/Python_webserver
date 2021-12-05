@@ -69,16 +69,20 @@ class server(Resource):
 
     json_bot_list = []
 
-    def __init__(self, json_bot_list=['bot1.json', 'bot2.json', 'bot3.json']):
+    def __init__(self, json_bot_list=None):
         """
         @:param json_bot_list: (list) a list of all the bots json file
         """
+        if json_bot_list is None:
+            json_bot_list = ['bot1.json', 'bot2.json', 'bot3.json']
         self.json_bot_list = json_bot_list
 
     def before_first_request(self, bot_type, func_name='', args=None):
         bot_authorization = True
 
-        if bot_type == 'bot1':
+        if bot_type+'.json' not in self.json_bot_list:
+            return False
+        elif bot_type == 'bot1':
             bot_authorization = auth.check_bot1_permissions(bot_type=bot_type, func=func_name)
 
         elif bot_type == 'bot3':
@@ -87,6 +91,8 @@ class server(Resource):
             certificate = args.get("certificate")
             bot_authorization = auth.check_bot3_authentication(bot_type=bot_type, name=name, password=password,
                                                                certificate=certificate)
+        elif bot_type+".json" not in self.json_bot_list:
+            return False
 
         return bot_authorization
 
@@ -123,7 +129,6 @@ class server(Resource):
             :return: resource_fields= (dictionary) {status: request status(200/409, message:message}
         """
         args = post_arg.parse_args()  # the params
-
         # check bot authorization (for bot3)
         can_post = True
         if bot_type == "bot3":
@@ -208,7 +213,6 @@ api.add_resource(server, "/botHandler/<string:bot_type>")
 if __name__ == '__main__':
     # create all the bots JSON file and there functions
     create_json_data.run()
-
     # start the server with the 'run()' method
     app.run(port=5000, debug=True)
 
