@@ -7,7 +7,7 @@
 - create_json_data - create the bots and save then in JSON files.
 - test.py - tests for the http requests.
 - utils.py - handle the http requests and send a response
-- Test Results - pytest_for_web_server.html - report of the last run of the test I did.
+- Test Results - .html - report of the last run of the test I did.
 
 # Run the server
 * Run the command: `py app.py` in the terminal at the project location.
